@@ -117,7 +117,7 @@
   <div id="player-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
       <h3 id="player-modal-title" class="text-lg font-bold mb-4">Add New Player</h3>
-      <form id="player-form" onsubmit="savePlayer(event)" class="space-y-4">
+      <form id="player-form" class="space-y-4">
         <input type="hidden" id="player-id">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Full Name</label>
@@ -137,7 +137,7 @@
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closePlayerModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Save Player</button>
+          <button type="button" onclick="savePlayer()" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Save Player</button>
         </div>
       </form>
     </div>
@@ -147,7 +147,7 @@
   <div id="event-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
       <h3 class="text-lg font-bold mb-4">Create New Event</h3>
-      <form id="event-form" onsubmit="saveEvent(event)" class="space-y-4">
+      <form id="event-form" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Event Name</label>
           <input type="text" id="event-title" placeholder="e.g. Regional Qualifier Game 1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -158,7 +158,7 @@
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closeEventModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Create Event</button>
+          <button type="button" onclick="saveEvent()" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Create Event</button>
         </div>
       </form>
     </div>
@@ -168,7 +168,7 @@
   <div id="battlefield-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
       <h3 class="text-lg font-bold mb-4">Create Battlefield</h3>
-      <form id="battlefield-form" onsubmit="saveBattlefield(event)" class="space-y-4">
+      <form id="battlefield-form" class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Battlefield Name</label>
           <input type="text" id="battlefield-name" placeholder="e.g. Arena A, Map 1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -179,7 +179,7 @@
         </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closeBattlefieldModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
-          <button type="submit" class="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Create Battlefield</button>
+          <button type="button" onclick="saveBattlefield()" class="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Create Battlefield</button>
         </div>
       </form>
     </div>
@@ -307,12 +307,16 @@
       document.getElementById('player-modal').classList.add('hidden');
     }
 
-    function savePlayer(e) {
-      e.preventDefault();
+    function savePlayer() {
       const id = document.getElementById('player-id').value;
       const name = document.getElementById('player-name').value;
       const role = document.getElementById('player-role').value;
       const status = document.getElementById('player-status').value;
+
+      if (!name || !role) {
+        alert('Please fill in all fields');
+        return;
+      }
 
       if (id) {
         const idx = players.findIndex(p => p.id === id);
@@ -369,10 +373,14 @@
       document.getElementById('event-modal').classList.add('hidden');
     }
 
-    function saveEvent(e) {
-      e.preventDefault();
+    function saveEvent() {
       const title = document.getElementById('event-title').value;
       const date = document.getElementById('event-date').value;
+
+      if (!title || !date) {
+        alert('Please fill in all fields');
+        return;
+      }
 
       const newEvent = {
         id: 'e_' + Date.now(),
@@ -420,10 +428,14 @@
       document.getElementById('battlefield-modal').classList.add('hidden');
     }
 
-    function saveBattlefield(e) {
-      e.preventDefault();
+    function saveBattlefield() {
       const battlefieldName = document.getElementById('battlefield-name').value;
       const teamName = document.getElementById('team-name').value;
+
+      if (!battlefieldName || !teamName) {
+        alert('Please fill in all fields');
+        return;
+      }
 
       const currentEvent = events.find(ev => ev.id === currentEventId);
       if (!currentEvent) return;
