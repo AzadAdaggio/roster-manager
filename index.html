@@ -92,9 +92,14 @@
         <div id="event-details-bar" class="text-xs text-slate-400 flex gap-4">
           <!-- Rendered via JS -->
         </div>
-        <button onclick="openBattlefieldModal()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg font-medium text-sm transition">
-          <i data-lucide="map-pin" class="w-4 h-4"></i> Add Battlefield
-        </button>
+        <div class="flex gap-2">
+          <button onclick="openBattlefieldModal()" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg font-medium text-sm transition">
+            <i data-lucide="map-pin" class="w-4 h-4"></i> Add Battlefield
+          </button>
+          <button onclick="deleteCurrentEvent()" class="flex items-center gap-2 bg-rose-600 hover:bg-rose-500 text-white px-3 py-2 rounded-lg font-medium text-sm transition">
+            <i data-lucide="trash-2" class="w-4 h-4"></i> Delete Event
+          </button>
+        </div>
       </div>
 
       <!-- Battlefields Container -->
@@ -386,6 +391,24 @@
       renderEventDropdown();
       loadEventBattlefields();
       closeEventModal();
+    }
+
+    function deleteCurrentEvent() {
+      if (!currentEventId) {
+        alert('No event selected');
+        return;
+      }
+
+      const currentEvent = events.find(e => e.id === currentEventId);
+      if (!currentEvent) return;
+
+      if (!confirm(`Delete event "${currentEvent.title}" and all its battlefields and teams?`)) return;
+
+      events = events.filter(e => e.id !== currentEventId);
+      currentEventId = events.length > 0 ? events[0].id : null;
+      saveData();
+      renderEventDropdown();
+      loadEventBattlefields();
     }
 
     function openBattlefieldModal() {
