@@ -177,9 +177,37 @@
           <label class="block text-xs font-medium text-slate-400 mb-1">Team Name</label>
           <input type="text" id="team-name" placeholder="e.g. Red Team, Team Alpha" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
         </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Commander Name</label>
+          <input type="text" id="team-commander" placeholder="e.g. John Doe" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" onclick="closeBattlefieldModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
           <button type="button" onclick="saveBattlefield()" class="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Create Battlefield</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Team Modal (for editing commander & party) -->
+  <div id="team-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+    <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
+      <h3 class="text-lg font-bold mb-4">Edit Team</h3>
+      <div class="space-y-4">
+        <input type="hidden" id="edit-team-event-id">
+        <input type="hidden" id="edit-team-battlefield-id">
+        <input type="hidden" id="edit-team-id">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Team Name</label>
+          <input type="text" id="edit-team-name" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Commander Name</label>
+          <input type="text" id="edit-team-commander" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+        </div>
+        <div class="flex justify-end gap-3 pt-2">
+          <button type="button" onclick="closeTeamModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
+          <button type="button" onclick="saveTeamChanges()" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Save Changes</button>
         </div>
       </div>
     </div>
@@ -205,7 +233,7 @@
             id: 'bf1', 
             name: 'Arena A', 
             teams: [
-              { id: 't1', name: 'Team Alpha', lineups: { starters: ['1', '2', '3'], reserves: ['4'] } }
+              { id: 't1', name: 'Team Alpha', commander: 'John Smith', lineups: { starters: ['1', '2', '3'], reserves: ['4'] } }
             ] 
           }
         ]
@@ -416,6 +444,7 @@
       }
       document.getElementById('battlefield-name').value = '';
       document.getElementById('team-name').value = '';
+      document.getElementById('team-commander').value = '';
       document.getElementById('battlefield-modal').classList.remove('hidden');
     }
 
@@ -426,8 +455,9 @@
     function saveBattlefield() {
       const battlefieldName = document.getElementById('battlefield-name').value.trim();
       const teamName = document.getElementById('team-name').value.trim();
+      const commanderName = document.getElementById('team-commander').value.trim();
 
-      if (!battlefieldName || !teamName) {
+      if (!battlefieldName || !teamName || !commanderName) {
         alert('Please fill in all fields');
         return;
       }
@@ -445,6 +475,7 @@
           {
             id: 't_' + Date.now(),
             name: teamName,
+            commander: commanderName,
             lineups: { starters: [], reserves: [] }
           }
         ]
@@ -514,13 +545,26 @@
           else unassignedCount++;
         });
 
+        // Check if 5-man party is full
+        const isPartyFull = startersCount >= 5;
+        const partyStatusColor = isPartyFull ? 'text-emerald-400' : 'text-amber-400';
+        const partyStatusText = isPartyFull ? '(5/5 Full)' : `(${startersCount}/5)`;
+
         battlefieldHTML += `
           <div class="space-y-3">
             <div class="flex justify-between items-center">
-              <h4 class="text-md font-semibold text-indigo-400">🎯 ${team.name}</h4>
-              <button onclick="deleteTeam('${currentEvent.id}', '${battlefield.id}', '${team.id}')" class="text-slate-400 hover:text-rose-400 transition text-xs">
-                <i data-lucide="x" class="w-3 h-3 inline"></i> Remove Team
-              </button>
+              <div class="flex items-center gap-2">
+                <h4 class="text-md font-semibold text-indigo-400">🎯 ${team.name}</h4>
+                <span class="text-xs text-slate-400">Commander: <span class="text-blue-400 font-medium">${team.commander || 'Unassigned'}</span></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="openTeamModal('${currentEvent.id}', '${battlefield.id}', '${team.id}')" class="text-slate-400 hover:text-blue-400 transition text-xs">
+                  <i data-lucide="edit-3" class="w-3 h-3 inline"></i>
+                </button>
+                <button onclick="deleteTeam('${currentEvent.id}', '${battlefield.id}', '${team.id}')" class="text-slate-400 hover:text-rose-400 transition text-xs">
+                  <i data-lucide="x" class="w-3 h-3 inline"></i> Remove Team
+                </button>
+              </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -529,7 +573,7 @@
                   <span><i data-lucide="users" class="w-3 h-3 inline mr-1"></i>Available</span>
                   <span class="bg-slate-700 px-2 py-0.5 rounded text-[10px]">${unassignedCount}</span>
                 </h5>
-                <div id="zone-unassigned-${team.id}" ondragover="allowDrop(event)" ondrop="drop(event, '${currentEvent.id}', '${battlefield.id}', '${team.id}', 'unassigned')" class="bg-slate-800/50 rounded p-2 min-h-[150px] overflow-y-auto space-y-2">
+                <div id="zone-unassigned-${team.id}" ondragover="allowDrop(event)" ondrop="drop(event, '${currentEvent.id}', '${battlefield.id}', '${team.id}', 'unassigned')" class="bg-slate-800/50 rounded-lg min-h-[60px] p-2 space-y-2 overflow-y-auto max-h-[120px]">
         `;
 
         players.forEach(player => {
@@ -542,12 +586,12 @@
                 </div>
               </div>
 
-              <div class="bg-emerald-950/30 p-3 rounded-lg border border-emerald-800/40">
-                <h5 class="text-xs font-semibold text-emerald-400 mb-2 flex items-center justify-between">
+              <div class="bg-emerald-950/30 p-3 rounded-lg border ${isPartyFull ? 'border-emerald-800/60' : 'border-emerald-800/40'}">
+                <h5 class="text-xs font-semibold ${partyStatusColor} mb-2 flex items-center justify-between">
                   <span><i data-lucide="star" class="w-3 h-3 inline mr-1"></i>Starters</span>
-                  <span class="bg-emerald-950 px-2 py-0.5 rounded text-[10px]">${startersCount}</span>
+                  <span class="bg-emerald-950 px-2 py-0.5 rounded text-[10px]">${startersCount}/5</span>
                 </h5>
-                <div id="zone-starters-${team.id}" ondragover="allowDrop(event)" ondrop="drop(event, '${currentEvent.id}', '${battlefield.id}', '${team.id}', 'starters')" class="bg-slate-800/50 rounded p-2 min-h-[150px] overflow-y-auto space-y-2">
+                <div id="zone-starters-${team.id}" ondragover="allowDrop(event)" ondrop="drop(event, '${currentEvent.id}', '${battlefield.id}', '${team.id}', 'starters')" class="bg-slate-800/50 rounded-lg min-h-[60px] p-2 space-y-2 overflow-y-auto max-h-[120px]">
         `;
 
         players.forEach(player => {
@@ -565,7 +609,7 @@
                   <span><i data-lucide="shield-alert" class="w-3 h-3 inline mr-1"></i>Reserves</span>
                   <span class="bg-amber-950 px-2 py-0.5 rounded text-[10px]">${reservesCount}</span>
                 </h5>
-                <div id="zone-reserves-${team.id}" ondragover="allowDrop(event)" ondrop="drop(event, '${currentEvent.id}', '${battlefield.id}', '${team.id}', 'reserves')" class="bg-slate-800/50 rounded p-2 min-h-[150px] overflow-y-auto space-y-2">
+                <div id="zone-reserves-${team.id}" ondragover="allowDrop(event)" ondrop="drop(event, '${currentEvent.id}', '${battlefield.id}', '${team.id}', 'reserves')" class="bg-slate-800/50 rounded-lg min-h-[60px] p-2 space-y-2 overflow-y-auto max-h-[120px]">
         `;
 
         players.forEach(player => {
@@ -584,7 +628,7 @@
 
       battlefieldHTML += `
         <div class="mt-3 pt-3 border-t border-slate-700">
-          <button onclick="addTeamToBattlefield('${currentEvent.id}', '${battlefield.id}')" class="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-xs font-medium transition">
+          <button onclick="addTeamToBattlefield('${currentEvent.id}', '${battlefield.id}')" class="w-full flex items-center justify-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg font-medium text-sm transition">
             <i data-lucide="plus" class="w-3 h-3"></i> Add Another Team
           </button>
         </div>
@@ -597,7 +641,7 @@
 
     function createPlayerCardHTML(player, teamId) {
       return `
-        <div id="player-card-${player.id}-${teamId}" draggable="true" ondragstart="drag(event, '${player.id}')" class="bg-slate-800 p-2 rounded-lg border border-slate-700/80 shadow-sm hover:border-indigo-500 cursor-grab active:cursor-grabbing transition text-[12px]">
+        <div id="player-card-${player.id}-${teamId}" draggable="true" ondragstart="drag(event, '${player.id}')" class="bg-slate-800 p-2 rounded-lg border border-slate-700/80 shadow-sm hover:border-indigo-500 cursor-move transition">
           <div class="font-semibold text-slate-100">${player.name}</div>
           <div class="text-[10px] text-slate-400">${player.role}</div>
         </div>
@@ -607,6 +651,9 @@
     function addTeamToBattlefield(eventId, battlefieldId) {
       const teamName = prompt('Enter team name:');
       if (!teamName) return;
+      
+      const commanderName = prompt('Enter commander name:');
+      if (!commanderName) return;
 
       const currentEvent = events.find(e => e.id === eventId);
       const battlefield = currentEvent.battlefields.find(bf => bf.id === battlefieldId);
@@ -615,9 +662,53 @@
         battlefield.teams.push({
           id: 't_' + Date.now(),
           name: teamName,
+          commander: commanderName,
           lineups: { starters: [], reserves: [] }
         });
         loadEventBattlefields();
+      }
+    }
+
+    function openTeamModal(eventId, battlefieldId, teamId) {
+      const currentEvent = events.find(e => e.id === eventId);
+      const battlefield = currentEvent.battlefields.find(bf => bf.id === battlefieldId);
+      const team = battlefield.teams.find(t => t.id === teamId);
+
+      if (team) {
+        document.getElementById('edit-team-event-id').value = eventId;
+        document.getElementById('edit-team-battlefield-id').value = battlefieldId;
+        document.getElementById('edit-team-id').value = teamId;
+        document.getElementById('edit-team-name').value = team.name;
+        document.getElementById('edit-team-commander').value = team.commander || '';
+        document.getElementById('team-modal').classList.remove('hidden');
+      }
+    }
+
+    function closeTeamModal() {
+      document.getElementById('team-modal').classList.add('hidden');
+    }
+
+    function saveTeamChanges() {
+      const eventId = document.getElementById('edit-team-event-id').value;
+      const battlefieldId = document.getElementById('edit-team-battlefield-id').value;
+      const teamId = document.getElementById('edit-team-id').value;
+      const teamName = document.getElementById('edit-team-name').value.trim();
+      const commanderName = document.getElementById('edit-team-commander').value.trim();
+
+      if (!teamName || !commanderName) {
+        alert('Please fill in all fields');
+        return;
+      }
+
+      const currentEvent = events.find(e => e.id === eventId);
+      const battlefield = currentEvent.battlefields.find(bf => bf.id === battlefieldId);
+      const team = battlefield.teams.find(t => t.id === teamId);
+
+      if (team) {
+        team.name = teamName;
+        team.commander = commanderName;
+        loadEventBattlefields();
+        closeTeamModal();
       }
     }
 
@@ -654,10 +745,18 @@
       const team = battlefield.teams.find(t => t.id === teamId);
       if (!team) return;
 
+      // Remove player from all zones first
       team.lineups.starters = team.lineups.starters.filter(id => id !== playerId);
       team.lineups.reserves = team.lineups.reserves.filter(id => id !== playerId);
 
-      if (targetZone === 'starters') team.lineups.starters.push(playerId);
+      // Add to target zone with 5-man party limit
+      if (targetZone === 'starters') {
+        if (team.lineups.starters.length < 5) {
+          team.lineups.starters.push(playerId);
+        } else {
+          alert('5-man party is full! Please remove a player from Starters first.');
+        }
+      }
       if (targetZone === 'reserves') team.lineups.reserves.push(playerId);
 
       loadEventBattlefields();
