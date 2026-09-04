@@ -117,7 +117,7 @@
   <div id="player-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
       <h3 id="player-modal-title" class="text-lg font-bold mb-4">Add New Player</h3>
-      <form id="player-form" class="space-y-4">
+      <div class="space-y-4">
         <input type="hidden" id="player-id">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Full Name</label>
@@ -139,7 +139,7 @@
           <button type="button" onclick="closePlayerModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
           <button type="button" onclick="savePlayer()" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Save Player</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -147,7 +147,7 @@
   <div id="event-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
       <h3 class="text-lg font-bold mb-4">Create New Event</h3>
-      <form id="event-form" class="space-y-4">
+      <div class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Event Name</label>
           <input type="text" id="event-title" placeholder="e.g. Regional Qualifier Game 1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -160,7 +160,7 @@
           <button type="button" onclick="closeEventModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
           <button type="button" onclick="saveEvent()" class="px-4 py-2 text-sm rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-medium">Create Event</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -168,7 +168,7 @@
   <div id="battlefield-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
     <div class="bg-slate-800 border border-slate-700 rounded-xl w-full max-w-md p-6 shadow-2xl">
       <h3 class="text-lg font-bold mb-4">Create Battlefield</h3>
-      <form id="battlefield-form" class="space-y-4">
+      <div class="space-y-4">
         <div>
           <label class="block text-xs font-medium text-slate-400 mb-1">Battlefield Name</label>
           <input type="text" id="battlefield-name" placeholder="e.g. Arena A, Map 1" required class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
@@ -181,13 +181,13 @@
           <button type="button" onclick="closeBattlefieldModal()" class="px-4 py-2 text-sm rounded-lg text-slate-400 hover:text-white">Cancel</button>
           <button type="button" onclick="saveBattlefield()" class="px-4 py-2 text-sm rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium">Create Battlefield</button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
   <!-- ==================== JAVASCRIPT LOGIC ==================== -->
   <script>
-    let players = JSON.parse(localStorage.getItem('roster_players')) || [
+    let players = [
       { id: '1', name: 'Alex Mercer', role: 'Captain / IGL', status: 'Active' },
       { id: '2', name: 'Samantha Vance', role: 'Support', status: 'Active' },
       { id: '3', name: 'Marcus Brody', role: 'Frontline / Entry', status: 'Active' },
@@ -195,7 +195,7 @@
       { id: '5', name: 'David Chen', role: 'Flex / Utility', status: 'Reserve' }
     ];
 
-    let events = JSON.parse(localStorage.getItem('roster_events')) || [
+    let events = [
       { 
         id: 'e1', 
         title: 'Championship Finals', 
@@ -220,11 +220,6 @@
       renderEventDropdown();
       loadEventBattlefields();
     });
-
-    function saveData() {
-      localStorage.setItem('roster_players', JSON.stringify(players));
-      localStorage.setItem('roster_events', JSON.stringify(events));
-    }
 
     function switchTab(tab) {
       const rosterTab = document.getElementById('tab-roster');
@@ -285,7 +280,9 @@
     function openPlayerModal(editId = null) {
       const modal = document.getElementById('player-modal');
       const title = document.getElementById('player-modal-title');
-      document.getElementById('player-form').reset();
+      document.getElementById('player-name').value = '';
+      document.getElementById('player-role').value = '';
+      document.getElementById('player-status').value = 'Active';
       document.getElementById('player-id').value = '';
 
       if (editId) {
@@ -325,7 +322,6 @@
         players.push({ id: Date.now().toString(), name, role, status });
       }
 
-      saveData();
       renderPlayerTable();
       closePlayerModal();
     }
@@ -343,7 +339,6 @@
           });
         });
       });
-      saveData();
       renderPlayerTable();
       loadEventBattlefields();
     }
@@ -365,7 +360,8 @@
     }
 
     function openEventModal() {
-      document.getElementById('event-form').reset();
+      document.getElementById('event-title').value = '';
+      document.getElementById('event-date').value = '';
       document.getElementById('event-modal').classList.remove('hidden');
     }
 
@@ -391,7 +387,6 @@
 
       events.push(newEvent);
       currentEventId = newEvent.id;
-      saveData();
       renderEventDropdown();
       loadEventBattlefields();
       closeEventModal();
@@ -410,7 +405,6 @@
 
       events = events.filter(e => e.id !== currentEventId);
       currentEventId = events.length > 0 ? events[0].id : null;
-      saveData();
       renderEventDropdown();
       loadEventBattlefields();
     }
@@ -420,7 +414,8 @@
         alert('Please create or select an event first');
         return;
       }
-      document.getElementById('battlefield-form').reset();
+      document.getElementById('battlefield-name').value = '';
+      document.getElementById('team-name').value = '';
       document.getElementById('battlefield-modal').classList.remove('hidden');
     }
 
@@ -429,8 +424,8 @@
     }
 
     function saveBattlefield() {
-      const battlefieldName = document.getElementById('battlefield-name').value;
-      const teamName = document.getElementById('team-name').value;
+      const battlefieldName = document.getElementById('battlefield-name').value.trim();
+      const teamName = document.getElementById('team-name').value.trim();
 
       if (!battlefieldName || !teamName) {
         alert('Please fill in all fields');
@@ -438,7 +433,10 @@
       }
 
       const currentEvent = events.find(ev => ev.id === currentEventId);
-      if (!currentEvent) return;
+      if (!currentEvent) {
+        alert('Event not found');
+        return;
+      }
 
       const newBattlefield = {
         id: 'bf_' + Date.now(),
@@ -453,9 +451,8 @@
       };
 
       currentEvent.battlefields.push(newBattlefield);
-      saveData();
-      loadEventBattlefields();
       closeBattlefieldModal();
+      loadEventBattlefields();
     }
 
     function loadEventBattlefields() {
@@ -620,7 +617,6 @@
           name: teamName,
           lineups: { starters: [], reserves: [] }
         });
-        saveData();
         loadEventBattlefields();
       }
     }
@@ -629,7 +625,6 @@
       if (!confirm('Delete this battlefield and all its teams?')) return;
       const currentEvent = events.find(e => e.id === eventId);
       currentEvent.battlefields = currentEvent.battlefields.filter(bf => bf.id !== battlefieldId);
-      saveData();
       loadEventBattlefields();
     }
 
@@ -638,7 +633,6 @@
       const currentEvent = events.find(e => e.id === eventId);
       const battlefield = currentEvent.battlefields.find(bf => bf.id === battlefieldId);
       battlefield.teams = battlefield.teams.filter(t => t.id !== teamId);
-      saveData();
       loadEventBattlefields();
     }
 
@@ -666,7 +660,6 @@
       if (targetZone === 'starters') team.lineups.starters.push(playerId);
       if (targetZone === 'reserves') team.lineups.reserves.push(playerId);
 
-      saveData();
       loadEventBattlefields();
     }
   </script>
